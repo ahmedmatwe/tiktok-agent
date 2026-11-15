@@ -1,0 +1,15 @@
+# Secrets: these live in GitHub Secrets, never in the repo
+.env
+client_secret.json
+data/youtube_token.json
+data/ig_token.json
+data/.fb_user_token
+
+# Local only
+venv/
+__pycache__/
+data/videos/
+*.tmp
+
+# Posting history lives in the private repo ahmedmatwe/tiktok-agent-data
+data/state.json

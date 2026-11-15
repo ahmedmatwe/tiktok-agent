@@ -1,0 +1,56 @@
+<title>Auto Repost Agent Privacy</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600&family=IBM+Plex+Sans:wght@400;600&display=swap">
+<style>
+/* Layout: one readable column, Arabic first then English, like a bilingual legal notice */
+:root {
+  --bg: #f7f8fa; --fg: #1d2330; --muted: #5b6474; --line: #dfe3ea; --accent: #2f5bd3;
+  --ar: "IBM Plex Sans Arabic", "Geeza Pro", Tahoma, sans-serif;
+  --en: "IBM Plex Sans", -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #12151c; --fg: #e6e9ef; --muted: #9aa3b2; --line: #2a303c; --accent: #8aa8ff; color-scheme: dark } }
+:root[data-theme="dark"] { --bg: #12151c; --fg: #e6e9ef; --muted: #9aa3b2; --line: #2a303c; --accent: #8aa8ff; color-scheme: dark }
+body { background: var(--bg); color: var(--fg); font: 16px/1.7 var(--en);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 48px; }
+main { max-width: 680px; margin: 0 auto; display: grid; gap: 40px; }
+header { display: grid; gap: 6px; border-bottom: 1px solid var(--line); padding-bottom: 20px; }
+h1 { font-size: 1.6rem; margin: 0; text-wrap: balance; }
+.meta { color: var(--muted); font-size: .9rem; margin: 0; }
+section { display: grid; gap: 10px; }
+section[lang="ar"] { font-family: var(--ar); direction: rtl; }
+h2 { font-size: 1.1rem; margin: 0; color: var(--accent); letter-spacing: .02em; }
+ul { margin: 0; padding-inline-start: 1.2em; display: grid; gap: 6px; }
+p { margin: 0; }
+a { color: var(--accent); }
+</style>
+
+<main>
+  <header>
+    <h1>Auto Repost Agent — Privacy Policy</h1>
+    <p class="meta">Last updated: 29 October 2026 · Operated by Ahmed Matwee (TikTok @ahmedmatwee)</p>
+  </header>
+
+  <section lang="ar">
+    <h2>سياسة الخصوصية</h2>
+    <p>Auto Repost Agent أداة شخصية بيستخدمها صاحبها بس، علشان يعيد نشر فيديوهاته هو من تيك توك على قناته في يوتيوب وحسابه على انستجرام.</p>
+    <ul>
+      <li>الأداة بتشتغل على جهاز صاحبها، ومفيش سيرفر بيجمع أي بيانات.</li>
+      <li>صلاحية يوتيوب الوحيدة المستخدمة هي رفع الفيديوهات (youtube.upload) على قناة صاحب الأداة.</li>
+      <li>مفاتيح الدخول بتتحفظ على جهاز صاحب الأداة بس، ومش بتتبعت لأي طرف تالت.</li>
+      <li>الأداة مش بتجمع ولا بتبيع ولا بتشارك بيانات أي مستخدم تاني.</li>
+      <li>تقدر تلغي صلاحية الأداة في أي وقت من <a href="https://myaccount.google.com/permissions">إعدادات حساب جوجل</a>.</li>
+    </ul>
+  </section>
+
+  <section lang="en">
+    <h2>Privacy policy</h2>
+    <p>Auto Repost Agent is a personal tool used only by its owner to repost the owner's own TikTok videos to the owner's YouTube channel and Instagram account.</p>
+    <ul>
+      <li>The tool runs on the owner's own computer. No server collects any data.</li>
+      <li>The only YouTube permission used is video upload (youtube.upload) to the owner's channel.</li>
+      <li>Sign-in tokens are stored only on the owner's computer and are never sent to third parties.</li>
+      <li>The tool does not collect, sell or share data about any other user.</li>
+      <li>Access can be revoked at any time from <a href="https://myaccount.google.com/permissions">Google Account permissions</a>.</li>
+    </ul>
+  </section>
+</main>
