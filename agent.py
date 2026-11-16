@@ -38,11 +38,32 @@ def enabled_publishers():
             if os.getenv(f"ENABLE_{name.upper()}", "true").lower() == "true"}
 
 
-def process(video, cookies, targets=None):
+RUN_STARTED = time.time()
+LAST_POST_KEY = "__last_new_post__"
+
+
+class Wait(Exception):
+    """A new video is ready but the previous one went out less than POST_GAP_MINUTES ago."""
+
+
+def gap_minutes_left():
+    gap = float(os.getenv("POST_GAP_MINUTES", "30"))
+    last = (state._load().get(LAST_POST_KEY) or {}).get("at", 0)
+    # Measured run-start to run-start, with 2 minutes of slack for GitHub's scheduler jitter.
+    return gap - 2 - (RUN_STARTED - last) / 60
+
+
+def process(video, cookies, targets=None, spaced=False):
     selected = {n: p for n, p in enabled_publishers().items() if targets is None or n in targets}
     pubs = {n: p for n, p in selected.items() if not state.done(video.id, n)}
     if not pubs:
         return
+    # Retries of a video that is already partly out go straight away; only brand-new videos wait their turn.
+    if spaced and len(pubs) == len(selected):
+        left = gap_minutes_left()
+        if left > 0:
+            raise Wait(f"{video.id} waits ~{round(left) + 2} min (one new video per half hour)")
+        state.mark(LAST_POST_KEY, "at", RUN_STARTED)
     log(f"🎬 New video {video.id} → {', '.join(pubs)}")
     tiktok.download(video, cookies)
     log(f"  ⬇️  downloaded without watermark: {video.path}")
@@ -76,6 +97,7 @@ def process(video, cookies, targets=None):
 def check_once():
     cookies = os.getenv("TIKTOK_COOKIES_FILE") or None
     failures = []
+    pending = []  # (video, targets, username) from every account, posted oldest first
     for username, sec_uid, primary in sources.accounts():
         try:
             videos = tiktok.latest_videos(username, cookies, sec_uid=sec_uid)
@@ -90,18 +112,22 @@ def check_once():
                 continue
             state.mark(marker, "done", True)
             log(f"Checking @{username}: {len(videos)} videos")
-            for v in reversed(videos):
-                if state.done(v.id, "_skipped_on_first_run"):
-                    continue
-                try:
-                    targets = None if primary else {"youtube", "instagram"}
-                    process(v, cookies, targets)
-                except Exception:
-                    failures.append(f"@{username}/{v.id}")
-                    log(f"  ❌ video {v.id} failed:\n{traceback.format_exc()}")
+            for v in videos:
+                if not state.done(v.id, "_skipped_on_first_run"):
+                    pending.append((v, None if primary else {"youtube", "instagram"}, username))
         except Exception:
             failures.append(f"@{username}")
             log(f"  ❌ account @{username} failed:\n{traceback.format_exc()}")
+
+    # TikTok ids grow with upload time, so this posts the oldest waiting video first, across all accounts.
+    for v, targets, username in sorted(pending, key=lambda p: int(p[0].id)):
+        try:
+            process(v, cookies, targets, spaced=True)
+        except Wait as w:
+            log(f"  ⏳ {w}")
+        except Exception:
+            failures.append(f"@{username}/{v.id}")
+            log(f"  ❌ video {v.id} failed:\n{traceback.format_exc()}")
     if failures:
         raise RuntimeError("Failed checks: " + ", ".join(failures))
 
