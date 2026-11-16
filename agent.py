@@ -120,7 +120,7 @@ def check_once():
             log(f"  ❌ account @{username} failed:\n{traceback.format_exc()}")
 
     # TikTok ids grow with upload time, so this posts the oldest waiting video first, across all accounts.
-    for v, targets, username in sorted(pending, key=lambda p: int(p[0].id)):
+    for v, targets, username in sorted(pending, key=lambda p: int(p[0].id) if p[0].id.isdigit() else 0):
         try:
             process(v, cookies, targets, spaced=True)
         except Wait as w:

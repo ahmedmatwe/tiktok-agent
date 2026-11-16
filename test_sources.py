@@ -41,7 +41,7 @@ class MultiSourceTests(unittest.TestCase):
             video = lambda id: types.SimpleNamespace(id=id)
             agent.tiktok.latest_videos = lambda username, *a, **kw: [video(username + "-video")]
             processed = []
-            agent.process = lambda v, cookies, targets=None: processed.append(v.id)
+            agent.process = lambda v, cookies, targets=None, **kw: processed.append(v.id)
             agent.check_once()
             self.assertEqual(processed, ["one-video"])
             self.assertTrue(state.done("two-video", "_skipped_on_first_run"))
@@ -61,7 +61,7 @@ class MultiSourceTests(unittest.TestCase):
                 return [types.SimpleNamespace(id="two-new")]
             agent.tiktok.latest_videos = latest
             processed = []
-            agent.process = lambda v, cookies, targets=None: processed.append(v.id)
+            agent.process = lambda v, cookies, targets=None, **kw: processed.append(v.id)
             with self.assertRaises(RuntimeError):
                 agent.check_once()
             self.assertEqual(processed, ["two-new"])
@@ -79,6 +79,22 @@ class MultiSourceTests(unittest.TestCase):
                 agent.process(types.SimpleNamespace(id="test", path="unused"), None)
             self.assertTrue(state.done("test", "youtube"))
             self.assertFalse(state.done("test", "instagram"))
+
+    def test_new_videos_go_out_one_per_half_hour_oldest_first(self):
+        agent = self.load_agent()
+        with tempfile.TemporaryDirectory() as tmp, patch.object(state, "STATE_FILE", tmp + "/state.json"), patch.dict(os.environ, {"TIKTOK_USERNAME": "one", "TIKTOK_USERNAMES": "one,two", "BACKFILL": "true"}, clear=True):
+            videos = {"one": ["300"], "two": ["200", "100"]}
+            agent.tiktok.latest_videos = lambda username, *a, **kw: [types.SimpleNamespace(id=i, path="unused", description="") for i in videos[username]]
+            agent.tiktok.download = lambda v, *a: v
+            agent.captioner.generate = lambda d: {"youtube_title": "t"}
+            posted = []
+            pub = types.SimpleNamespace(publish=lambda path, meta: posted.append(path) or "link")
+            agent.enabled_publishers = lambda: {"youtube": pub}
+            # minutes since first run -> videos posted so far (oldest id first, across both accounts)
+            for minutes, done in [(0, ["100"]), (16, ["100"]), (30, ["100", "200"]), (60, ["100", "200", "300"])]:
+                agent.RUN_STARTED = 1_000_000 + minutes * 60
+                agent.check_once()
+                self.assertEqual([i for i in ("100", "200", "300") if state.done(i, "youtube")], done, f"after {minutes} min")
 
 
 if __name__ == "__main__":
