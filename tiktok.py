@@ -63,8 +63,10 @@ def download(video: Video, cookies_file: Optional[str] = None) -> Video:
     os.makedirs(DOWNLOAD_DIR, exist_ok=True)
     opts = _base_opts(cookies_file)
     opts.update({
-        # TikTok exposes a watermarked "download" format and clean "play" formats: skip the watermarked one.
+        # TikTok exposes a watermarked "download" format and clean "play" formats: skip the watermarked one,
+        # then take the highest resolution, and at equal resolution the highest bitrate.
         "format": "b[format_note!*=atermark]/bv*[format_note!*=atermark]+ba/b",
+        "format_sort": ["res", "tbr", "br"],
         "outtmpl": os.path.join(DOWNLOAD_DIR, "%(id)s.%(ext)s"),
         "merge_output_format": "mp4",
         "overwrites": True,
@@ -80,6 +82,8 @@ def download(video: Video, cookies_file: Optional[str] = None) -> Video:
         return _apify_download(video)
     if not os.path.exists(path):
         path = os.path.splitext(path)[0] + ".mp4"
+    print(f"  📐 quality: {info.get('width')}x{info.get('height')} {info.get('vcodec')} "
+          f"{round(info.get('tbr') or 0)}kbps (direct from TikTok)", flush=True)
     video.description = info.get("description") or video.description
     video.path = path
     return video
@@ -105,6 +109,8 @@ def _apify_download(video: Video) -> Video:
         with open(path, "wb") as f:
             for chunk in v.iter_content(1 << 20):
                 f.write(chunk)
+    meta = item.get("videoMeta") or {}
+    print(f"  📐 quality: {meta.get('width')}x{meta.get('height')} (via Apify)", flush=True)
     video.description = item.get("text") or video.description
     video.path = path
     return video

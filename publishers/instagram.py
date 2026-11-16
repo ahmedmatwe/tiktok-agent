@@ -81,9 +81,10 @@ def _to_h264(path):
     out = os.path.splitext(path)[0] + ".ig.mp4"
     subprocess.run([
         "ffmpeg", "-y", "-loglevel", "error", "-i", path,
-        "-vf", "scale='min(1080,iw)':-2,fps=30", "-c:v", "libx264", "-preset", "veryfast",
-        "-crf", "21", "-pix_fmt", "yuv420p", "-profile:v", "high",
-        "-c:a", "aac", "-b:a", "128k", "-ar", "44100", "-movflags", "+faststart", out,
+        # Near-lossless re-encode: the HEVC source is already compressed, so keep as much of it as possible.
+        "-vf", "scale='min(1080,iw)':-2,fps=30", "-c:v", "libx264", "-preset", "slow",
+        "-crf", "16", "-pix_fmt", "yuv420p", "-profile:v", "high",
+        "-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-movflags", "+faststart", out,
     ], check=True, timeout=600)
     return out
 
